@@ -16,15 +16,18 @@
     <!-- Sección: Filtro -->
     <section id="filtro">
       <h2 class="text-2xl font-semibold mb-4">Filtro</h2>
-      <p class="mb-4">Selecciona un tipo de almacenamiento para ver tarjetas relacionadas:</p>
-      <select id="filtroSelect" class="border p-2 rounded">
-        <option value="todos">Todos</option>
-        <option value="primario">Almacenamiento Primario</option>
-        <option value="secundario">Almacenamiento Secundario</option>
-        <option value="nube">Almacenamiento en la Nube</option>
-        <option value="bd">Bases de Datos</option>
-        <option value="archivo">Archivado</option>
-      </select>
+      <div class="flex flex-col sm:flex-row gap-4 mb-4">
+        <input id="filtroTexto" type="text" placeholder="Buscar por tipo o uso..."
+          class="border p-2 rounded w-full sm:w-1/2">
+        <select id="filtroSelect" class="border p-2 rounded w-full sm:w-1/2">
+          <option value="todos">Todos</option>
+          <option value="primario">Almacenamiento Primario</option>
+          <option value="secundario">Almacenamiento Secundario</option>
+          <option value="nube">Almacenamiento en la Nube</option>
+          <option value="bd">Bases de Datos</option>
+          <option value="archivo">Archivado</option>
+        </select>
+      </div>
     </section>
 
     <!-- Sección: Tarjetas -->
@@ -71,7 +74,7 @@
   </footer>
 
   <!-- ===================== -->
-  <!-- Bloque de datos + JS -->
+  <!-- Datos + Funciones JS -->
   <!-- ===================== -->
   <script>
     // -----------------
@@ -228,80 +231,99 @@
       }
     ];
 
-    // -----------------
-    // Render dinámico
-    // -----------------
+    // =============================
+    // Funciones de renderizado
+    // =============================
 
-    // Render de tarjetas
-    const cardsContainer = document.getElementById("cardsContainer");
-    function renderCards(filtro = "todos") {
+    function renderCards(list) {
+      const cardsContainer = document.getElementById("cardsContainer");
       cardsContainer.innerHTML = "";
-      items
-        .filter(item => filtro === "todos" || item.categoria === filtro)
-        .forEach(item => {
-          const div = document.createElement("div");
-          div.className = "card border rounded-xl p-4 shadow bg-white";
-          div.innerHTML = `
-            <h3 class="text-xl font-bold mb-2">${item.tipo}</h3>
-            <p class="text-gray-700 mb-2">${item.desc}</p>
-            <ul class="text-sm text-gray-600 space-y-1">
-              <li><strong>Uso:</strong> ${item.uso}</li>
-              <li><strong>Ejemplos:</strong> ${item.ejemplos}</li>
-            </ul>
-          `;
-          cardsContainer.appendChild(div);
-        });
+      list.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "card border rounded-xl p-4 shadow bg-white";
+        div.innerHTML = `
+          <h3 class="text-xl font-bold mb-2">${item.tipo}</h3>
+          <p class="text-gray-700 mb-2">${item.desc}</p>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li><strong>Uso:</strong> ${item.uso}</li>
+            <li><strong>Ejemplos:</strong> ${item.ejemplos}</li>
+          </ul>
+        `;
+        cardsContainer.appendChild(div);
+      });
     }
-    renderCards();
 
-    document.getElementById("filtroSelect").addEventListener("change", e => {
-      renderCards(e.target.value);
-    });
+    function renderTabla(list) {
+      const tablaBody = document.getElementById("tablaBody");
+      tablaBody.innerHTML = "";
+      list.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="border px-4 py-2">${item.tipo}</td>
+          <td class="border px-4 py-2">${item.latencia}</td>
+          <td class="border px-4 py-2">${item.rendimiento}</td>
+          <td class="border px-4 py-2">${item.durabilidad}</td>
+          <td class="border px-4 py-2">${item.escalabilidad}</td>
+          <td class="border px-4 py-2">${item.coste}</td>
+        `;
+        tablaBody.appendChild(tr);
+      });
+    }
 
-    // Render tabla
-    const tablaBody = document.getElementById("tablaBody");
-    items.forEach(item => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="border px-4 py-2">${item.tipo}</td>
-        <td class="border px-4 py-2">${item.latencia}</td>
-        <td class="border px-4 py-2">${item.rendimiento}</td>
-        <td class="border px-4 py-2">${item.durabilidad}</td>
-        <td class="border px-4 py-2">${item.escalabilidad}</td>
-        <td class="border px-4 py-2">${item.coste}</td>
-      `;
-      tablaBody.appendChild(tr);
-    });
+    function applyFilter() {
+      const filtroSelect = document.getElementById("filtroSelect");
+      const filtroTexto = document.getElementById("filtroTexto");
+      const categoria = filtroSelect ? filtroSelect.value : "todos";
+      const texto = filtroTexto ? filtroTexto.value.toLowerCase() : "";
+
+      const filtrados = items.filter(item => {
+        const coincideCategoria = (categoria === "todos" || item.categoria === categoria);
+        const coincideTexto =
+          item.tipo.toLowerCase().includes(texto) ||
+          item.uso.toLowerCase().includes(texto) ||
+          item.desc.toLowerCase().includes(texto);
+        return coincideCategoria && coincideTexto;
+      });
+
+      renderCards(filtrados);
+      renderTabla(filtrados);
+    }
 
     // Render glosario
-    const glosarioList = document.getElementById("glosarioList");
-    glosario.forEach(entry => {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <dt class="font-bold">${entry.termino}:</dt>
-        <dd>${entry.definicion}</dd>
-      `;
-      glosarioList.appendChild(div);
-    });
+    function renderGlosario() {
+      const glosarioList = document.getElementById("glosarioList");
+      glosarioList.innerHTML = "";
+      glosario.forEach(entry => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <dt class="font-bold">${entry.termino}:</dt>
+          <dd>${entry.definicion}</dd>
+        `;
+        glosarioList.appendChild(div);
+      });
+    }
 
     // Render quiz
-    const quizContainer = document.getElementById("quizContainer");
-    preguntas.forEach((q, index) => {
-      const div = document.createElement("div");
-      div.className = "bg-white p-4 rounded-xl shadow";
-      div.innerHTML = `
-        <p class="mb-2 font-semibold">${q.pregunta}</p>
-        <div class="space-x-2 mb-2">
-          ${q.opciones.map(op =>
-            `<button class="bg-blue-600 text-white px-3 py-1 rounded-xl" onclick="checkAnswer(${index}, '${op}')">${op}</button>`
-          ).join("")}
-        </div>
-        <p id="quizResult${index}" class="mt-2"></p>
-      `;
-      quizContainer.appendChild(div);
-    });
+    function renderQuiz() {
+      const quizContainer = document.getElementById("quizContainer");
+      quizContainer.innerHTML = "";
+      preguntas.forEach((q, index) => {
+        const div = document.createElement("div");
+        div.className = "bg-white p-4 rounded-xl shadow";
+        div.innerHTML = `
+          <p class="mb-2 font-semibold">${q.pregunta}</p>
+          <div class="space-x-2 mb-2">
+            ${q.opciones.map(op =>
+              `<button class="bg-blue-600 text-white px-3 py-1 rounded-xl" onclick="checkAnswer(${index}, '${op}')">${op}</button>`
+            ).join("")}
+          </div>
+          <p id="quizResult${index}" class="mt-2"></p>
+        `;
+        quizContainer.appendChild(div);
+      });
+    }
 
-    // Función de corrección
+    // Verificación de respuestas
     function checkAnswer(index, respuesta) {
       const result = document.getElementById("quizResult" + index);
       if (respuesta === preguntas[index].correcta) {
@@ -312,6 +334,22 @@
         result.className = "text-red-600 font-bold mt-2";
       }
     }
+
+    // =============================
+    // Inicialización al cargar
+    // =============================
+    document.addEventListener("DOMContentLoaded", () => {
+      renderCards(items);
+      renderTabla(items);
+      renderGlosario();
+      renderQuiz();
+
+      const filtroSelect = document.getElementById("filtroSelect");
+      const filtroTexto = document.getElementById("filtroTexto");
+
+      if (filtroSelect) filtroSelect.addEventListener("change", applyFilter);
+      if (filtroTexto) filtroTexto.addEventListener("input", applyFilter);
+    });
   </script>
 </body>
 </html>
